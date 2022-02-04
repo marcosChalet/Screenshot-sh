@@ -1,86 +1,101 @@
 #!/bin/bash
 
-# chalet-screenshot - É um script que captura a tela usando imagemagick.
-# Versão 1: Faz um print screen da tela inteira.
-# Versão 2: Salva o print screen em um diretório específico.
-# Versão 3: Recorta a imagem.
+# chalet-screenshot - Is a script that take screenshots using imagemagick.
+# Version 1: Capture full screen.
+# Versoin 2: Sava to a specified directory.
+# Version 3: Crop the image.
+# Version 3: Copy to clipboard.
 #
 #
 #
-# Autor - Marcos Chalet
+# Author - Marcos Chalet
 #
 
-CORTAR=0
+CUT=0
+COPY=0
 
-DIR_SALVAR=~/Imagens/capturas
-NOME_PRINT=screenshot
-EXTENCAO=png
+PATH_SAVE=~/screenshots
+NAME=screenshot
+EXTENSION=png
 INDICE=-1
-LOCAL_CORTE=
+CUT_LOCATION=
 
-AJUDA="
-Uso: $(basename "$0") [OPÇÕES]
+HELP="
+Use: $(basename "$0") [OPTIONS]
 
-OPCÕES:
-    -c, --cut MxN+B+H       Recorta recorta a área do print.
-    -d, --dir ~/novo_dir    Especifica um diretório.
-    -h, --help              Mostra esta tela de ajuda.
+OPTIONS:
+    -c, --copy    Copy the image to clipboard
+    -p, --path    Change directory.
+    -h, --help    Show help.
+    -x, --cut     Select image area.
+
+EXAMPLE:
+    -p ~/set/new/path
+    -x 300x300+10+10
+    -p ~/set/new/path -x 300x300+10+10
 "
 
-# Trantando as opções passadas na chamada do programa.
+# Selecting run options.
 while test -n "$1"
 do
     case "$1" in
-
-        -c | --cut)
-            shift
-            CORTAR=1
-            LOCAL_CORTE="$1"
+        -c | --copy)
+            COPY=1
         ;;
 
-        -d | --dir)
+        -p | --path)
             shift
-            DIR_SALVAR="$1"
+            PATH_SAVE="$1"
+        ;;
+
+        -x | --cut)
+            shift
+            CUT=1
+            CUT_LOCATION="$1"
         ;;
 
         -h | --help)
-            echo "$AJUDA"
+            echo "$HELP"
             exit 0
         ;;
 
         *)
-            echo "Entrada inválida: $1"
-            echo "Ececute \"$(basename $0) -h\" para obter ajuda."
+            echo "Invalid input: $1"
+            echo "Run \"$(basename $0) -h\" to get help."
             exit 1
         ;;
     esac
 
-    # Movendo a fila de comandos passados até ($n)
+    # Moving the command queue to ($n).
     shift
 done
 
-##### PEGANDO O ÍNDICE DO ULTIMO PRINT TIRADO #####
+##### GETTING THE ID IN THE NAME OF LAST SCREENSHOT #####
 
-# Seleciona prints tirados
-INDICE=$(ls -v -r "$DIR_SALVAR" | grep screenshot)
+# Select screenshots taken.
+INDICE=$(ls -v -r "$PATH_SAVE" | grep screenshot)
 
-# Pego apenas os índices de todos os prints já tirados.
+# List the ids of the screenshots already taken.
 INDICE=$(echo "$INDICE" | grep -o '[0-9]*' | sed -z 's/\n/, /g')
 
-# Pega o maior índice.
+# Get the last id.
 INDICE=$(echo "$INDICE" | cut -d , -f -1)
 
-# Incrementa para unificar o nome e não substituir a imagem
+# Put as the value of the next id.
 INDICE=$((INDICE+1))
 
 ###################################################
 
 
-# Tira o print-screen no local indicado.
-import -window root "$DIR_SALVAR"/"$NOME_PRINT"_"$INDICE"."$EXTENCAO"
+# Take a screenshot at the indicated location.
+import -window root "$PATH_SAVE"/"$NAME"_"$INDICE"."$EXTENSION"
 
-# Corta a imagem.
-test "$CORTAR" = 1 && magick -extract "$LOCAL_CORTE"\
-                                      "$DIR_SALVAR"/"$NOME_PRINT"_"$INDICE"."$EXTENCAO"\
-                                      "$DIR_SALVAR"/"$NOME_PRINT"_"$INDICE"."$EXTENCAO"
+# Crop the image.
+test "$CUT" = 1 && magick -extract "$CUT_LOCATION"\
+                                      "$PATH_SAVE"/"$NAME"_"$INDICE"."$EXTENSION"\
+                                      "$PATH_SAVE"/"$NAME"_"$INDICE"."$EXTENSION"
+
+# Copy to clipboard.
+test "$COPY" = 1 && xclip -selection clipboard -t image/png\
+                      -i "$PATH_SAVE"/"$NAME"_"$INDICE"."$EXTENSION"
 
