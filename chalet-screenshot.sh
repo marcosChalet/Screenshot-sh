@@ -4,8 +4,8 @@
 # Version 1: Capture full screen.
 # Versoin 2: Sava to a specified directory.
 # Version 3: Crop the image.
-# Version 3: Copy to clipboard.
-#
+# Version 3: Copy to the clipboard.
+# Version 4: Validate directory and create the default directory.
 #
 #
 # Author - Marcos Chalet
@@ -20,11 +20,13 @@ EXTENSION=png
 INDICE=-1
 CUT_LOCATION=
 
+!(test -d "$PATH_SAVE") && mkdir "$PATH_SAVE"
+
 HELP="
 Use: $(basename "$0") [OPTIONS]
 
 OPTIONS:
-    -c, --copy    Copy the image to clipboard
+    -c, --copy    Copy the image to the clipboard
     -p, --path    Change directory.
     -h, --help    Show help.
     -x, --cut     Select image area.
@@ -46,6 +48,9 @@ do
         -p | --path)
             shift
             PATH_SAVE="$1"
+
+            # Validates directory
+            !(test -d "$PATH_SAVE") && echo "Invalid directory!" && exit 0
         ;;
 
         -x | --cut)
